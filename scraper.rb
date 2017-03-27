@@ -13,39 +13,43 @@ def scrape(h)
   klass.new(response: Scraped::Request.new(url: url).response)
 end
 
-class MapitArea
-  include FieldSerializer
+module Scraped
+  class JSON < Document
+    private
 
-  def initialize(area)
-    @area = area
+    def initialize(json: nil, **args)
+      super(**args)
+      @json = json
+    end
+
+    def json
+      @json ||= ::JSON.parse(response.body, symbolize_names: true)
+    end
+
+    def fragment(mapping)
+      json_fragment, klass = mapping.to_a.first
+      klass.new(json: json_fragment, response: response)
+    end
   end
+end
 
+class MapitArea < Scraped::JSON
   field :id do
-    area[:id]
+    json[:id]
   end
 
   field :name do
-    area[:name]
+    json[:name]
   end
 
   field :osm_rel do
-    area[:codes][:osm_rel]
+    json[:codes][:osm_rel]
   end
-
-  private
-
-  attr_reader :area
 end
 
-class MapitAreas < Scraped::Document
+class MapitAreas < Scraped::JSON
   field :areas do
-    json.values.map { |area| MapitArea.new(area) }.map(&:to_h)
-  end
-
-  private
-
-  def json
-    @json ||= JSON.parse(response.body, symbolize_names: true)
+    json.values.map { |area| fragment(area => MapitArea) }.map(&:to_h)
   end
 end
 
