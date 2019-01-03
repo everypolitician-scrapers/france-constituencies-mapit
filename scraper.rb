@@ -52,7 +52,7 @@ class MapitAreas < Scraped::JSON
   end
 end
 
-areas = scrape('http://global.mapit.mysociety.org/areas/OCL' => MapitAreas).to_h[:areas]
+areas = scrape('https://global.mapit.mysociety.org/areas/OCL' => MapitAreas).to_h[:areas]
 
 ScraperWiki.sqliteexecute('DROP TABLE data') rescue nil
 ScraperWiki.save_sqlite([:id], areas)
